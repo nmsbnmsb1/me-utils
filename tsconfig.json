@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"module": "esnext",
+		"target": "es2017",
+		"moduleResolution": "node",
+		"noImplicitAny": false,
+		"removeComments": true,
+		"preserveConstEnums": true,
+		"suppressImplicitAnyIndexErrors": true,
+		"sourceMap": true,
+		"esModuleInterop": true,
+		"declaration": true,
+		"declarationDir": "lib",
+		"outDir": "lib",
+		"baseUrl": "."
+	},
+	"include": ["src/**/*.ts"],
+	"exclude": ["node_modules"]
+}

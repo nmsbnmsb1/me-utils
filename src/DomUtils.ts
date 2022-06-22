@@ -23,7 +23,9 @@
 
 const SPECIAL_CHARS_REGEXP = /([\:\-\_]+(.))/g;
 const MOZ_HACK_REGEXP = /^moz([A-Z])/;
-const ieVersion = Number(document.DOCUMENT_NODE);
+const ieVersion = function () {
+	return document ? Number(document.DOCUMENT_NODE || 0) : 0;
+};
 
 export class DomUtils {
 	public static trim(str: string) {
@@ -113,7 +115,7 @@ export class DomUtils {
 	}
 
 	public static getStyle(element: any, styleName: any) {
-		if (ieVersion < 9) {
+		if (ieVersion() < 9) {
 			if (!element || !styleName) return null;
 			styleName = DomUtils.camelCase(styleName);
 			if (styleName === 'float') {
@@ -159,7 +161,7 @@ export class DomUtils {
 			}
 		} else {
 			styleName = DomUtils.camelCase(styleName);
-			if (styleName === 'opacity' && ieVersion < 9) {
+			if (styleName === 'opacity' && ieVersion() < 9) {
 				element.style.filter = isNaN(value) ? '' : 'alpha(opacity=' + value * 100 + ')';
 			} else {
 				element.style[styleName] = value;

@@ -1,32 +1,54 @@
-// https://github.com/thinkjs/think-helper#43d7b132a47248ebb403a01901936c480906e8a0
-// The MIT License(MIT)
-
-// Copyright(c) 2017 ThinkJS
-
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files(the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
+import crypto from 'crypto';
 import { v1, v4 } from 'uuid';
-import md5 from './../node_modules/uuid/dist/esm-node/md5';
 
 export class CryptoUtils {
-	public static md5(bytes: any) {
-		return md5(bytes);
+	/**
+	 * 生成随机字符串
+	 * https://github.com/maichong/string-random
+	 */
+	private static chars = ['0123456789', 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz', '~!@#$%^*()_+-=[]{}|;:,./<>?'];
+	public static randomString(
+		length: number = 8,
+		options: true | string | { numbers?: boolean | string; letters?: boolean | string; specials?: boolean | string } = {}
+	) {
+		let chars = '';
+		let result = '';
+
+		if (options === true) {
+			chars = CryptoUtils.chars.join('');
+		} else if (typeof options == 'string') {
+			chars = options;
+		} else {
+			if (options.numbers !== false) chars += typeof options.numbers == 'string' ? options.numbers : CryptoUtils.chars[0];
+			if (options.letters !== false) chars += typeof options.letters == 'string' ? options.letters : CryptoUtils.chars[1];
+			if (options.specials) chars += typeof options.specials == 'string' ? options.specials : CryptoUtils.chars[2];
+		}
+
+		while (length > 0) {
+			length--;
+			result += chars[Math.floor(Math.random() * chars.length)];
+		}
+		return result;
+	}
+
+	//
+	public static md5(bytes: any, encoding: any = 'hex') {
+		if (Array.isArray(bytes)) {
+			bytes = Buffer.from(bytes);
+		} else if (typeof bytes === 'string') {
+			bytes = Buffer.from(bytes, 'utf8');
+		}
+		//
+		return crypto.createHash('md5').update(bytes).digest(encoding);
+	}
+	public static sha256(bytes: any, encoding: any = 'hex') {
+		if (Array.isArray(bytes)) {
+			bytes = Buffer.from(bytes);
+		} else if (typeof bytes === 'string') {
+			bytes = Buffer.from(bytes, 'utf8');
+		}
+		//
+		return crypto.createHash('sha256').update(bytes).digest(encoding);
 	}
 	public static uuid(version: string) {
 		if (version === 'v1') return v1();

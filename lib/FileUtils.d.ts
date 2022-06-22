@@ -1,4 +1,5 @@
 /// <reference types="node" />
+/// <reference types="node" />
 import fs from 'fs';
 export declare class FileUtils {
     static isExist(dir: string): boolean;

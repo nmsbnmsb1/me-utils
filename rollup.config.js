@@ -28,7 +28,7 @@ const browser = {
 	output: { format: 'esm', file: pkg.module, sourcemap: true },
 	external: [...Object.keys(pkg.dependencies || {})],
 	plugins: [
-		replace({ './../node_modules/uuid/dist/esm-node/md5': `'blueimp-md5'`, delimiters: [`'`, `'`] }),
+		//replace({ './../node_modules/uuid/dist/esm-node/md5': `'blueimp-md5'`, delimiters: [`'`, `'`] }),
 		resolve(),
 		commonjs(),
 		typescript({

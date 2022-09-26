@@ -41,7 +41,7 @@ export class DomUtils {
 	}
 
 	public static on(el: any, event: any, handler: any) {
-		if (document.addEventListener) {
+		if (el.addEventListener) {
 			el.addEventListener(event, handler, false);
 		} else {
 			el.attachEvent('on' + event, handler);
@@ -49,7 +49,7 @@ export class DomUtils {
 	}
 
 	public static off(el: any, event: any, handler: any) {
-		if (document.removeEventListener) {
+		if (el.removeEventListener) {
 			el.removeEventListener(event, handler, false);
 		} else {
 			el.detachEvent('on' + event, handler);
@@ -114,9 +114,9 @@ export class DomUtils {
 		}
 	}
 
-	public static getStyle(element: any, styleName: any) {
+	public static getStyle(el: any, styleName: any, options?: { window: any }) {
 		if (ieVersion() < 9) {
-			if (!element || !styleName) return null;
+			if (!el || !styleName) return null;
 			styleName = DomUtils.camelCase(styleName);
 			if (styleName === 'float') {
 				styleName = 'styleFloat';
@@ -125,46 +125,47 @@ export class DomUtils {
 				switch (styleName) {
 					case 'opacity':
 						try {
-							return element.filters.item('alpha').opacity / 100;
+							return el.filters.item('alpha').opacity / 100;
 						} catch (e) {
 							return 1.0;
 						}
 					default:
-						return element.style[styleName] || element.currentStyle ? element.currentStyle[styleName] : null;
+						return el.style[styleName] || el.currentStyle ? el.currentStyle[styleName] : null;
 				}
 			} catch (e) {
-				return element.style[styleName];
+				return el.style[styleName];
 			}
 		} else {
-			if (!element || !styleName) return null;
+			if (!el || !styleName) return null;
 			styleName = DomUtils.camelCase(styleName);
 			if (styleName === 'float') {
 				styleName = 'cssFloat';
 			}
 			try {
-				var computed = document.defaultView.getComputedStyle(element, '');
-				return element.style[styleName] || computed ? computed[styleName] : null;
+				let doc = options && options.window ? options.window.document : document;
+				let computed = doc.defaultView.getComputedStyle(el, '');
+				return el.style[styleName] || computed ? computed[styleName] : null;
 			} catch (e) {
-				return element.style[styleName];
+				return el.style[styleName];
 			}
 		}
 	}
 
-	public static setStyle(element: any, styleName: any, value: any) {
-		if (!element || !styleName) return;
+	public static setStyle(el: any, styleName: any, value: any) {
+		if (!el || !styleName) return;
 
 		if (typeof styleName === 'object') {
 			for (var prop in styleName) {
 				if (styleName.hasOwnProperty(prop)) {
-					DomUtils.setStyle(element, prop, styleName[prop]);
+					DomUtils.setStyle(el, prop, styleName[prop]);
 				}
 			}
 		} else {
 			styleName = DomUtils.camelCase(styleName);
 			if (styleName === 'opacity' && ieVersion() < 9) {
-				element.style.filter = isNaN(value) ? '' : 'alpha(opacity=' + value * 100 + ')';
+				el.style.filter = isNaN(value) ? '' : 'alpha(opacity=' + value * 100 + ')';
 			} else {
-				element.style[styleName] = value;
+				el.style[styleName] = value;
 			}
 		}
 	}
@@ -180,10 +181,11 @@ export class DomUtils {
 		return overflow.match(/(scroll|auto)/);
 	}
 
-	public static getScrollContainer(el: any, vertical: any) {
+	public static getScrollContainer(el: any, vertical: any, options?: { window: any }) {
+		let win = options && options.window ? options.window : window;
 		let parent = el;
 		while (parent) {
-			if ([window, document, document.documentElement].includes(parent)) {
+			if ([win, win.document, win.document.documentElement].includes(parent)) {
 				return window;
 			}
 			if (DomUtils.isScroll(parent, vertical)) {
@@ -195,17 +197,18 @@ export class DomUtils {
 		return parent;
 	}
 
-	public static isInContainer(el: any, container: any) {
+	public static isInContainer(el: any, container: any, options?: { window: any }) {
 		if (!el || !container) return false;
 
+		const win = options && options.window ? options.window : window;
 		const elRect = el.getBoundingClientRect();
 		let containerRect;
 
-		if ([window, document, document.documentElement, null, undefined].includes(container)) {
+		if ([win, win.document, win.document.documentElement, null, undefined].includes(container)) {
 			containerRect = {
 				top: 0,
-				right: window.innerWidth,
-				bottom: window.innerHeight,
+				right: win.innerWidth,
+				bottom: win.innerHeight,
 				left: 0,
 			};
 		} else {
@@ -217,10 +220,11 @@ export class DomUtils {
 
 	private static scrollBarWidth: number = -1;
 
-	public static calcNativeScrollBarWidth() {
+	public static calcNativeScrollBarWidth(options?: { window: any }) {
 		if (DomUtils.scrollBarWidth >= 0) return DomUtils.scrollBarWidth;
 
-		let e = document.createElement('div');
+		let doc = options && options.window ? options.window.document : document;
+		let e = doc.createElement('div');
 		let sw: number;
 		e.style.position = 'absolute';
 		e.style.top = '-9999px';
@@ -228,9 +232,9 @@ export class DomUtils {
 		e.style.height = '100px';
 		e.style.overflow = 'scroll';
 		(e.style as any).msOverflowStyle = 'scrollbar';
-		document.body.appendChild(e);
+		doc.body.appendChild(e);
 		sw = e.offsetWidth - e.clientWidth;
-		document.body.removeChild(e);
+		doc.body.removeChild(e);
 		DomUtils.scrollBarWidth = sw;
 		return sw;
 	}

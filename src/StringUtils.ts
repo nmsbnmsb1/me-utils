@@ -44,6 +44,12 @@ export class StringUtils {
 		return numberReg.test(obj);
 	}
 
+	public static fillZero(s: any, bits: number) {
+		s = s.toString();
+		while (s.length < bits) s = `0${s}`;
+		return s;
+	}
+
 	// public static escapeHtml(str: string) {
 	//     return (str + '').replace(/[<>'"]/g, a => {
 	//         switch (a) {

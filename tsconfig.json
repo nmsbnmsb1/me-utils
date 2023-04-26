@@ -10,7 +10,8 @@
 		"esModuleInterop": true,
 		"declaration": true,
 		"outDir": "lib",
-		"baseUrl": "."
+		"baseUrl": ".",
+		"ignoreDeprecations": "5.0"
 	},
 	"include": ["src/**/*.ts"],
 	"exclude": ["node_modules", "**/*.spec.ts"]

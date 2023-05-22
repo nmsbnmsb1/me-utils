@@ -137,23 +137,18 @@ export class FileUtils {
 		FileUtils.mkdir(path.dirname(p), mode);
 		fs.writeFileSync(p, data, options);
 	}
-
-	public static readFile(p: string, options?: { encoding?: null; flag?: string }) {
-		if (FileUtils.isExist(p)) {
-			let buffer = fs.readFileSync(p, options);
-			return buffer;
-		}
-		return '';
+	public static writeJSONFile(p: string, data: any, jsonSpace?: number, options?: fs.WriteFileOptions) {
+		FileUtils.writeFile(p, JSON.stringify(data, undefined, jsonSpace), options);
 	}
 
+	public static readFile(p: string, options?: { encoding?: null; flag?: string }) {
+		return fs.readFileSync(p, options);
+	}
 	public static readTxtFile(p: string, options?: { encoding?: null; flag?: string }) {
-		// if (FileUtils.isExist(p)) {
-		//   let buffer = fs.readFileSync(p, options);
-		//   return buffer.toString();
-		// }
-		// return '';
-		let content = FileUtils.readFile(p, options);
-		if (content) return content.toString();
-		return content;
+		return fs.readFileSync(p, options).toString();
+	}
+	public static readJSONFile(p: string, options?: { encoding?: null; flag?: string }) {
+		let content = fs.readFileSync(p, options).toString();
+		return content ? JSON.parse(content) : undefined;
 	}
 }

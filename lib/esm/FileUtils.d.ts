@@ -11,12 +11,17 @@ export declare class FileUtils {
     static rmdir(p: string, reserve?: any): Promise<unknown>;
     static rm(p: string, reserve?: any): Promise<unknown>;
     static writeFile(p: string, data: any, options?: fs.WriteFileOptions): void;
+    static writeJSONFile(p: string, data: any, jsonSpace?: number, options?: fs.WriteFileOptions): void;
     static readFile(p: string, options?: {
         encoding?: null;
         flag?: string;
-    }): "" | Buffer;
+    }): Buffer;
     static readTxtFile(p: string, options?: {
         encoding?: null;
         flag?: string;
-    }): string | Buffer;
+    }): string;
+    static readJSONFile(p: string, options?: {
+        encoding?: null;
+        flag?: string;
+    }): any;
 }

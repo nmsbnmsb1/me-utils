@@ -13,9 +13,9 @@
 	},
 	"devDependencies": {
 		"@types/ms": "^0.7.31",
-		"@types/node": "^20.2.3",
-		"@types/uuid": "^9.0.1",
+		"@types/node": "^20.3.3",
+		"@types/uuid": "^9.0.2",
 		"prettier": "^2.8.8",
-		"typescript": "^5.0.4"
+		"typescript": "^5.1.6"
 	}
 }

@@ -50,13 +50,14 @@ export class CryptoUtils {
 		//
 		return crypto.createHash('sha256').update(bytes).digest(encoding);
 	}
-	public static uuid(version: string = 'v4', options: { removeDash?: boolean; lowerCase?: boolean } = {}) {
+	public static uuid(options?: { version?: string; removeDash?: boolean; lowerCase?: boolean }) {
+		let ver = options && options.version ? options.version : 'v4';
 		let id = '';
-		if (version === 'v1') id = v1();
+		if (ver === 'v1') id = v1();
 		else id = v4();
 		//
-		if (options.removeDash == true) id = id.replace(/\-/g, '');
-		if (options.lowerCase === true) id = id.toLowerCase();
+		if (options && options.removeDash == true) id = id.replace(/\-/g, '');
+		if (options && options.lowerCase === true) id = id.toLowerCase();
 		//
 		return id;
 	}

@@ -7,7 +7,8 @@ export declare class CryptoUtils {
     }): string;
     static md5(bytes: any, encoding?: any): string;
     static sha256(bytes: any, encoding?: any): string;
-    static uuid(version?: string, options?: {
+    static uuid(options?: {
+        version?: string;
         removeDash?: boolean;
         lowerCase?: boolean;
     }): string;

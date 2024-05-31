@@ -13,7 +13,7 @@
 	},
 	"devDependencies": {
 		"@types/ms": "^0.7.34",
-		"@types/node": "^20.12.12",
+		"@types/node": "^20.12.13",
 		"@types/uuid": "^9.0.8",
 		"prettier": "^3.2.5",
 		"typescript": "^5.4.5"

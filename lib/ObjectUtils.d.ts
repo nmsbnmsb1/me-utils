@@ -2,13 +2,13 @@ export declare class ObjectUtils {
     static objectToString(o: any): any;
     static hasOwn(obj: any, key: any): any;
     static isArray(arg: any): boolean;
-    static isBoolean(arg: any): boolean;
+    static isBoolean(arg: any): arg is boolean;
     static isNull(arg: any): boolean;
     static isNullOrUndefined(arg: any): boolean;
-    static isNumber(arg: any): boolean;
+    static isNumber(arg: any): arg is number;
     static isInt(value: any): boolean;
-    static isString(arg: any): boolean;
-    static isSymbol(arg: any): boolean;
+    static isString(arg: any): arg is string;
+    static isSymbol(arg: any): arg is symbol;
     static isUndefined(arg: any): boolean;
     static isRegExp(re: any): boolean;
     static isObject(arg: any): boolean;
@@ -18,11 +18,11 @@ export declare class ObjectUtils {
     static isFunction(arg: any): boolean;
     static isAsyncFcuntion(fn: any): boolean;
     static isPrimitive(arg: any): boolean;
-    static isBuffer(arg: any): boolean;
+    static isBuffer(arg: any): arg is Buffer;
     static promisify(fn: any, receiver: any): (...args: any) => Promise<unknown>;
-    static extend(target?: {}, ...args: any): {};
+    static extend(target?: any, ...args: any): any;
     static isTrueEmpty(obj: any): boolean;
     static isEmpty(obj: any): boolean;
     static defer(): any;
-    static omit(obj: any, props: any[] | string): {};
+    static omit(obj: any, props: any[] | string): any;
 }

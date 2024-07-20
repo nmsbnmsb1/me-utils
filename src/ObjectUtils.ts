@@ -155,7 +155,7 @@ export class ObjectUtils {
 		};
 	}
 
-	public static extend(target = {}, ...args: any) {
+	public static extend(target: any = {}, ...args: any) {
 		let i = 0;
 		const length = args.length;
 		let options;
@@ -233,7 +233,7 @@ export class ObjectUtils {
 			props = (props as string).split(',');
 		}
 		const keys = Object.keys(obj);
-		const result = {};
+		const result: any = {};
 		keys.forEach((item) => {
 			if (props.indexOf(item) === -1) {
 				result[item] = obj[item];

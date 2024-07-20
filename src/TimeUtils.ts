@@ -52,7 +52,7 @@ export class TimeUtils {
 		};
 
 		const d = new Date(date);
-		const formats = {
+		const formats: any = {
 			YYYY: d.getFullYear(),
 			MM: fn(d.getMonth() + 1),
 			DD: fn(d.getDate()),

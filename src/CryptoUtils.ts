@@ -1,4 +1,5 @@
-import crypto from 'crypto';
+import { md5 } from 'js-md5';
+import { sha256 } from 'js-sha256';
 import { v1, v4 } from 'uuid';
 
 export class CryptoUtils {
@@ -33,23 +34,25 @@ export class CryptoUtils {
 
 	//
 	public static md5(bytes: any, encoding: any = 'hex') {
-		if (Array.isArray(bytes)) {
-			bytes = Buffer.from(bytes);
-		} else if (typeof bytes === 'string') {
-			bytes = Buffer.from(bytes, 'utf8');
-		}
-		//
-		return crypto.createHash('md5').update(bytes).digest(encoding);
+		// if (Array.isArray(bytes)) {
+		// 	bytes = Buffer.from(bytes);
+		// } else if (typeof bytes === 'string') {
+		// 	bytes = Buffer.from(bytes, 'utf8');
+		// }
+		// return crypto.createHash('md5').update(bytes).digest(encoding);
+		return md5(bytes);
 	}
 	public static sha256(bytes: any, encoding: any = 'hex') {
-		if (Array.isArray(bytes)) {
-			bytes = Buffer.from(bytes);
-		} else if (typeof bytes === 'string') {
-			bytes = Buffer.from(bytes, 'utf8');
-		}
-		//
-		return crypto.createHash('sha256').update(bytes).digest(encoding);
+		// if (Array.isArray(bytes)) {
+		// 	bytes = Buffer.from(bytes);
+		// } else if (typeof bytes === 'string') {
+		// 	bytes = Buffer.from(bytes, 'utf8');
+		// }
+		// return crypto.createHash('sha256').update(bytes).digest(encoding);
+		return sha256(bytes);
 	}
+
+	//
 	public static uuid(options?: { version?: string; removeDash?: boolean; lowerCase?: boolean }) {
 		let ver = options && options.version ? options.version : 'v4';
 		let id = '';

@@ -1,5 +1,4 @@
 export * from './CryptoUtils';
-export * from './DomUtils';
 export * from './FileUtils';
 export * from './NetUtils';
 export * from './ObjectUtils';

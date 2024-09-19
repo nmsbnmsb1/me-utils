@@ -1,11 +1,11 @@
 {
 	"compilerOptions": {
-		"module": "commonjs",
-		"target": "es2018",
+		"module": "ESNext",
+		"target": "ESNext",
+		"moduleResolution": "node",
 		"noImplicitAny": true,
 		"removeComments": true,
 		"preserveConstEnums": true,
-		"suppressImplicitAnyIndexErrors": true,
 		"sourceMap": true,
 		"esModuleInterop": true,
 		"declaration": true,
@@ -13,6 +13,6 @@
 		"baseUrl": ".",
 		"ignoreDeprecations": "5.0"
 	},
-	"include": ["src/**/*.ts"],
+	"include": ["src/index.ts"],
 	"exclude": ["node_modules", "**/*.spec.ts"]
 }

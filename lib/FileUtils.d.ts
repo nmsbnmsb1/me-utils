@@ -13,7 +13,7 @@ export declare class FileUtils {
     static readFile(p: string, options?: {
         encoding?: null;
         flag?: string;
-    }): Buffer;
+    }): Buffer<ArrayBufferLike>;
     static readTxtFile(p: string, options?: {
         encoding?: null;
         flag?: string;

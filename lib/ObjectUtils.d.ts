@@ -18,11 +18,12 @@ export declare class ObjectUtils {
     static isFunction(arg: any): boolean;
     static isAsyncFcuntion(fn: any): boolean;
     static isPrimitive(arg: any): boolean;
-    static isBuffer(arg: any): arg is Buffer;
+    static isBuffer(arg: any): arg is Buffer<ArrayBufferLike>;
     static promisify(fn: any, receiver: any): (...args: any) => Promise<unknown>;
     static extend(target?: any, ...args: any): any;
     static isTrueEmpty(obj: any): boolean;
     static isEmpty(obj: any): boolean;
     static defer(): any;
     static omit(obj: any, props: any[] | string): any;
+    static isShallowEqual(obj1: any, obj2: any): boolean;
 }

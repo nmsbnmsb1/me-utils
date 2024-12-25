@@ -38,8 +38,8 @@
 			},
 			"suspicious": {
 				"noExplicitAny": "off",
-				"noPrototypeBuiltins": "off",
-				"noGlobalIsNan": "off"
+				"noPrototypeBuiltins": "info",
+				"noGlobalIsNan": "info"
 			}
 		}
 	},

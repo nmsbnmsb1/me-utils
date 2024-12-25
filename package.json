@@ -11,6 +11,9 @@
 		}
 	},
 	"scripts": {
+		"format": "biome format",
+		"lint": "biome lint",
+		"check": "biome check",
 		"build": "rollup -c && mv ./lib/browser/index.browser.d.ts ./lib/browser/index.d.ts"
 	},
 	"dependencies": {
@@ -20,15 +23,16 @@
 		"uuid": "^11.0.3"
 	},
 	"devDependencies": {
-		"@rollup/plugin-commonjs": "^28.0.1",
-		"@rollup/plugin-node-resolve": "^15.3.0",
-		"@rollup/plugin-replace": "^6.0.1",
+		"@biomejs/biome": "^1.9.4",
+		"@rollup/plugin-commonjs": "^28.0.2",
+		"@rollup/plugin-node-resolve": "^16.0.0",
+		"@rollup/plugin-replace": "^6.0.2",
 		"@types/js-md5": "^0.7.2",
 		"@types/ms": "^0.7.34",
 		"@types/node": "^22.10.2",
 		"@types/uuid": "^10.0.0",
 		"prettier": "^3.4.2",
-		"rollup": "^4.28.1",
+		"rollup": "^4.29.1",
 		"rollup-plugin-typescript2": "^0.36.0",
 		"typescript": "^5.7.2"
 	}

@@ -1,3 +1,4 @@
-export declare class ThreadUtils {
-    static isMaster: boolean;
-}
+export declare const ThreadUtils: {
+    isMaster: boolean;
+    isPrimary: boolean;
+};

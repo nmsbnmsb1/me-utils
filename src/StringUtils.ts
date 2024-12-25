@@ -23,34 +23,34 @@
 
 const numberReg = /^((-?(\d+\.|\d+|\.\d)\d*(?:e[+-]?\d*(?:\d?\.?|\.?\d?)\d*)?)|(0[0-7]+)|(0x[0-9a-f]+))$/i;
 
-export class StringUtils {
-	public static camelCase(str: string) {
+export const StringUtils = {
+	camelCase(str: string) {
 		if (str.indexOf('_') > -1) {
 			str = str.replace(/_(\w)/g, (a, b) => {
 				return b.toUpperCase();
 			});
 		}
 		return str;
-	}
+	},
 
-	public static snakeCase(str: string) {
-		return str.replace(/([^A-Z])([A-Z])/g, function ($0, $1, $2) {
-			return $1 + '_' + $2.toLowerCase();
+	snakeCase(str: string) {
+		return str.replace(/([^A-Z])([A-Z])/g, ($0, $1, $2) => {
+			return `${$1}_${$2.toLowerCase()}`;
 		});
-	}
+	},
 
-	public static isNumberString(obj: string) {
+	isNumberString(obj: string) {
 		if (!obj) return false;
 		return numberReg.test(obj);
-	}
+	},
 
-	public static fillZero(s: any, bits: number) {
+	fillZero(s: any, bits: number) {
 		s = s.toString();
 		while (s.length < bits) s = `0${s}`;
 		return s;
-	}
+	},
 
-	// public static escapeHtml(str: string) {
+	// escapeHtml(str: string) {
 	//     return (str + '').replace(/[<>'"]/g, a => {
 	//         switch (a) {
 	//             case '<':
@@ -64,4 +64,4 @@ export class StringUtils {
 	//         }
 	//     });
 	// }
-}
+};

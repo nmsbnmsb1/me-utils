@@ -1,15 +1,14 @@
-export declare class CryptoUtils {
-    private static chars;
-    static randomString(length?: number, options?: true | string | {
+export declare const CryptoUtils: {
+    randomString(length?: number, options?: true | string | {
         numbers?: boolean | string;
         letters?: boolean | string;
         specials?: boolean | string;
     }): string;
-    static md5(bytes: any, encoding?: any): string;
-    static sha256(bytes: any, encoding?: any): string;
-    static uuid(options?: {
+    md5(bytes: string | number[] | ArrayBuffer | Uint8Array, encoding?: string): string;
+    sha256(bytes: string | number[] | ArrayBuffer | Uint8Array, encoding?: string): string;
+    uuid(options?: {
         version?: string;
         removeDash?: boolean;
         lowerCase?: boolean;
     }): string;
-}
+};

@@ -45,88 +45,72 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-export class ObjectUtils {
-	public static objectToString(o: any) {
+export const ObjectUtils = {
+	objectToString(o: any) {
 		return Object.prototype.toString.call(o);
-	}
+	},
 
-	public static hasOwn(obj: any, key: any) {
+	hasOwn(obj: any, key: any) {
 		return Object.prototype.hasOwnProperty.call(obj, key);
-	}
+	},
 
-	public static isArray(arg: any) {
+	isArray(arg: any) {
 		if (Array.isArray) {
 			return Array.isArray(arg);
 		}
 		return ObjectUtils.objectToString(arg) === '[object Array]';
-	}
-
-	public static isBoolean(arg: any) {
+	},
+	isBoolean(arg: any) {
 		return typeof arg === 'boolean';
-	}
-
-	public static isNull(arg: any) {
+	},
+	isNull(arg: any) {
 		return arg === null;
-	}
-
-	public static isNullOrUndefined(arg: any) {
-		return arg == null || arg == undefined;
-	}
-
-	public static isNumber(arg: any) {
+	},
+	isNullOrUndefined(arg: any) {
+		return arg == null || arg === undefined;
+	},
+	isNumber(arg: any) {
 		return typeof arg === 'number';
-	}
-
-	public static isInt(value: any) {
+	},
+	isInt(value: any) {
 		if (isNaN(value) || ObjectUtils.isString(value)) {
 			return false;
 		}
-		var x = parseFloat(value);
+		const x = Number.parseFloat(value);
 		return (x | 0) === x;
-	}
-
-	public static isString(arg: any) {
+	},
+	isString(arg: any) {
 		return typeof arg === 'string';
-	}
-
-	public static isSymbol(arg: any) {
+	},
+	isSymbol(arg: any) {
 		return typeof arg === 'symbol';
-	}
-
-	public static isUndefined(arg: any) {
+	},
+	isUndefined(arg: any) {
 		return arg === void 0;
-	}
-
-	public static isRegExp(re: any) {
+	},
+	isRegExp(re: any) {
 		return ObjectUtils.objectToString(re) === '[object RegExp]';
-	}
-
-	public static isObject(arg: any) {
+	},
+	isObject(arg: any) {
 		return typeof arg === 'object' && arg !== null;
-	}
-
-	public static isTrueObject(obj: any) {
+	},
+	isTrueObject(obj: any) {
 		return toString.call(obj) === '[object Object]';
-	}
-
-	public static isDate(d: any) {
+	},
+	isDate(d: any) {
 		return ObjectUtils.objectToString(d) === '[object Date]';
-	}
-
-	public static isError(e: any) {
+	},
+	isError(e: any) {
 		return ObjectUtils.objectToString(e) === '[object Error]' || e instanceof Error;
-	}
-
-	public static isFunction(arg: any) {
+	},
+	isFunction(arg: any) {
 		return typeof arg === 'function';
-	}
-
-	public static isAsyncFcuntion(fn: any) {
+	},
+	isAsyncFcuntion(fn: any) {
 		const AsyncFunction = Object.getPrototypeOf(async () => {}).constructor;
 		return fn instanceof AsyncFunction;
-	}
-
-	public static isPrimitive(arg: any) {
+	},
+	isPrimitive(arg: any) {
 		return (
 			arg === null ||
 			typeof arg === 'boolean' ||
@@ -135,14 +119,13 @@ export class ObjectUtils {
 			typeof arg === 'symbol' || // ES6 symbol
 			typeof arg === 'undefined'
 		);
-	}
-
-	public static isBuffer(arg: any) {
+	},
+	isBuffer(arg: any) {
 		return Buffer.isBuffer(arg);
-	}
+	},
 
 	// 把一个方法Promise化
-	public static promisify(fn: any, receiver: any) {
+	promisify(fn: any, receiver: any) {
 		return (...args: any) => {
 			return new Promise((resolve, reject) => {
 				fn.apply(receiver, [
@@ -153,15 +136,23 @@ export class ObjectUtils {
 				]);
 			});
 		};
-	}
+	},
+	defer() {
+		const deferred: any = {};
+		deferred.promise = new Promise((resolve, reject) => {
+			deferred.resolve = resolve;
+			deferred.reject = reject;
+		});
+		return deferred;
+	},
 
-	public static extend(target: any = {}, ...args: any) {
+	extend(target: any = {}, ...args: any) {
 		let i = 0;
 		const length = args.length;
-		let options;
-		let name;
-		let src;
-		let copy;
+		let options: any;
+		let name: any;
+		let src: any;
+		let copy: any;
 		if (!target) {
 			target = ObjectUtils.isArray(args[0]) ? [] : {};
 		}
@@ -186,63 +177,60 @@ export class ObjectUtils {
 			}
 		}
 		return target;
-	}
+	},
 
-	public static isTrueEmpty(obj: any) {
+	isTrueEmpty(obj: any) {
 		if (obj === undefined || obj === null || obj === '') return true;
 		if (ObjectUtils.isNumber(obj) && isNaN(obj)) return true;
 		return false;
-	}
-
-	public static isEmpty(obj: any) {
+	},
+	isEmpty(obj: any) {
 		if (ObjectUtils.isTrueEmpty(obj)) return true;
 		if (ObjectUtils.isRegExp(obj)) {
 			return false;
-		} else if (ObjectUtils.isDate(obj)) {
+		}
+		if (ObjectUtils.isDate(obj)) {
 			return false;
-		} else if (ObjectUtils.isError(obj)) {
+		}
+		if (ObjectUtils.isError(obj)) {
 			return false;
-		} else if (ObjectUtils.isArray(obj)) {
+		}
+		if (ObjectUtils.isArray(obj)) {
 			return obj.length === 0;
-		} else if (ObjectUtils.isString(obj)) {
+		}
+		if (ObjectUtils.isString(obj)) {
 			return obj.length === 0;
-		} else if (ObjectUtils.isNumber(obj)) {
+		}
+		if (ObjectUtils.isNumber(obj)) {
 			return obj === 0;
-		} else if (ObjectUtils.isBoolean(obj)) {
+		}
+		if (ObjectUtils.isBoolean(obj)) {
 			return !obj;
-		} else if (ObjectUtils.isObject(obj)) {
+		}
+		if (ObjectUtils.isObject(obj)) {
 			for (const key in obj) {
 				return false && key; // only for eslint
 			}
 			return true;
 		}
 		return false;
-	}
+	},
 
-	public static defer() {
-		const deferred: any = {};
-		deferred.promise = new Promise((resolve, reject) => {
-			deferred.resolve = resolve;
-			deferred.reject = reject;
-		});
-		return deferred;
-	}
-
-	public static omit(obj: any, props: any[] | string) {
+	omit(obj: any, props: any[] | string) {
 		if (ObjectUtils.isString(props)) {
 			props = (props as string).split(',');
 		}
 		const keys = Object.keys(obj);
 		const result: any = {};
-		keys.forEach((item) => {
+		for (const item of keys) {
 			if (props.indexOf(item) === -1) {
 				result[item] = obj[item];
 			}
-		});
+		}
 		return result;
-	}
+	},
 
-	public static isShallowEqual(obj1: any, obj2: any): boolean {
+	isShallowEqual(obj1: any, obj2: any): boolean {
 		if (obj1 === obj2) return true;
 
 		if (typeof obj1 !== 'object' || obj1 === null || typeof obj2 !== 'object' || obj2 === null) {
@@ -261,5 +249,5 @@ export class ObjectUtils {
 		}
 
 		return true;
-	}
-}
+	},
+};

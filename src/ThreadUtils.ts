@@ -21,8 +21,9 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import cluster from 'cluster';
+import cluster from 'node:cluster';
 
-export class ThreadUtils {
-	public static isMaster = cluster.isMaster;
-}
+export const ThreadUtils = {
+	isMaster: cluster.isPrimary,
+	isPrimary: cluster.isPrimary,
+};

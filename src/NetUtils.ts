@@ -21,10 +21,10 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import net from 'net';
+import net from 'node:net';
 
-export class NetUtils {
-	public static isIP = net.isIP;
-	public static isIPv4 = net.isIPv4;
-	public static isIPv6 = net.isIPv6;
-}
+export const NetUtils = {
+	isIP: net.isIP,
+	isIPv4: net.isIPv4,
+	isIPv6: net.isIPv6,
+};

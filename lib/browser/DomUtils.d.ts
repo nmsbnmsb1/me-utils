@@ -1,25 +1,24 @@
-export declare class DomUtils {
-    static trim(str: string): string;
-    static camelCase(name: string): string;
-    static on(el: any, event: any, handler: any): void;
-    static off(el: any, event: any, handler: any): void;
-    static once(el: any, event: any, fn: any, ...args: any[]): void;
-    static hasClass(el: any, cls: any): any;
-    static addClass(el: any, cls: any): void;
-    static removeClass(el: any, cls: any): void;
-    static getStyle(el: any, styleName: any, options?: {
+export declare const DomUtils: {
+    trim(str: string): string;
+    camelCase(name: string): string;
+    on(el: any, event: any, handler: any): void;
+    off(el: any, event: any, handler: any): void;
+    once(el: any, event: any, fn: any, ...args: any[]): void;
+    hasClass(el: any, cls: any): any;
+    addClass(el: any, cls: any): void;
+    removeClass(el: any, cls: any): void;
+    getStyle(el: any, styleName: any, options?: {
         window: any;
     }): any;
-    static setStyle(el: any, styleName: any, value: any): void;
-    static isScroll(el: any, vertical: any): any;
-    static getScrollContainer(el: any, vertical: any, options?: {
+    setStyle(el: any, styleName: any, value: any): void;
+    isScroll(el: any, vertical: any): any;
+    getScrollContainer(el: any, vertical: any, options?: {
         window: any;
     }): any;
-    static isInContainer(el: any, container: any, options?: {
+    isInContainer(el: any, container: any, options?: {
         window: any;
     }): boolean;
-    private static scrollBarWidth;
-    static calcNativeScrollBarWidth(options?: {
+    calcNativeScrollBarWidth(options?: {
         window: any;
     }): number;
-}
+};

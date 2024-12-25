@@ -21,16 +21,16 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import path from 'path';
-import fs from 'fs';
+import fs from 'node:fs';
+import path from 'node:path';
 import { ObjectUtils } from './ObjectUtils';
 
 const fsRmdir = ObjectUtils.promisify(fs.rmdir, fs);
 const fsUnlink = ObjectUtils.promisify(fs.unlink, fs);
 const fsReaddir = ObjectUtils.promisify(fs.readdir, fs);
 
-export class FileUtils {
-	public static isExist(dir: string) {
+export const FileUtils = {
+	isExist(dir: string) {
 		dir = path.normalize(dir);
 		try {
 			fs.accessSync(dir, fs.constants.R_OK);
@@ -38,9 +38,8 @@ export class FileUtils {
 		} catch (e) {
 			return false;
 		}
-	}
-
-	public static isFile(filePath: string) {
+	},
+	isFile(filePath: string) {
 		if (!FileUtils.isExist(filePath)) return false;
 		try {
 			const stat = fs.statSync(filePath);
@@ -48,9 +47,8 @@ export class FileUtils {
 		} catch (e) {
 			return false;
 		}
-	}
-
-	public static isDirectory(filePath: string) {
+	},
+	isDirectory(filePath: string) {
 		if (!FileUtils.isExist(filePath)) return false;
 		try {
 			const stat = fs.statSync(filePath);
@@ -58,18 +56,18 @@ export class FileUtils {
 		} catch (e) {
 			return false;
 		}
-	}
+	},
 
-	public static chmod(p: fs.PathLike, mode: string | number) {
+	chmod(p: fs.PathLike, mode: string | number) {
 		try {
 			fs.chmodSync(p, mode);
 			return true;
 		} catch (e) {
 			return false;
 		}
-	}
+	},
 
-	public static mkdir(dir: string, mode?: string | number): boolean {
+	mkdir(dir: string, mode?: string | number): boolean {
 		if (FileUtils.isExist(dir)) {
 			if (mode) return FileUtils.chmod(dir, mode);
 			return true;
@@ -86,14 +84,14 @@ export class FileUtils {
 		}
 		if (FileUtils.mkdir(pp, mode)) return FileUtils.mkdir(dir, mode);
 		return false;
-	}
+	},
 
-	public static getdirFiles(dir: string, prefix = '') {
+	getdirFiles(dir: string, prefix = '') {
 		dir = path.normalize(dir);
 		if (!fs.existsSync(dir)) return [];
 		const files = fs.readdirSync(dir);
 		let result: any[] = [];
-		files.forEach((item) => {
+		for (const item of files) {
 			const currentDir = path.join(dir, item);
 			const stat = fs.statSync(currentDir);
 			if (stat.isFile()) {
@@ -102,11 +100,11 @@ export class FileUtils {
 				const cFiles = FileUtils.getdirFiles(currentDir, path.join(prefix, item));
 				result = result.concat(cFiles);
 			}
-		});
+		}
 		return result;
-	}
+	},
 
-	public static rmdir(p: string, reserve: any = false) {
+	rmdir(p: string, reserve: any = false) {
 		if (!FileUtils.isDirectory(p)) return Promise.resolve();
 		return fsReaddir(p).then((files: any) => {
 			const promises = files.map((item: any) => {
@@ -118,37 +116,37 @@ export class FileUtils {
 				if (!reserve) return fsRmdir(p);
 			});
 		});
-	}
+	},
 
-	public static rm(p: string, reserve: any = false) {
+	rm(p: string, reserve: any = false) {
 		if (FileUtils.isDirectory(p)) return Promise.resolve();
 		return fsUnlink(p).then(() => {
 			if (!reserve) {
-				let dirname = path.dirname(p);
-				let dirs = fs.readdirSync(dirname);
+				const dirname = path.dirname(p);
+				const dirs = fs.readdirSync(dirname);
 				if (dirs.length <= 0) return fsUnlink(dirname);
 			}
 		});
-	}
+	},
 
-	public static writeFile(p: string, data: any, options?: fs.WriteFileOptions) {
-		let mode;
+	writeFile(p: string, data: any, options?: fs.WriteFileOptions) {
+		let mode: any;
 		if (options && typeof options !== 'string' && options.mode !== undefined) mode = options.mode;
 		FileUtils.mkdir(path.dirname(p), mode);
 		fs.writeFileSync(p, data, options);
-	}
-	public static writeJSONFile(p: string, data: any, jsonSpace?: number, options?: fs.WriteFileOptions) {
+	},
+	writeJSONFile(p: string, data: any, jsonSpace?: number, options?: fs.WriteFileOptions) {
 		FileUtils.writeFile(p, JSON.stringify(data, undefined, jsonSpace), options);
-	}
+	},
 
-	public static readFile(p: string, options?: { encoding?: null; flag?: string }) {
+	readFile(p: string, options?: { encoding?: null; flag?: string }) {
 		return fs.readFileSync(p, options);
-	}
-	public static readTxtFile(p: string, options?: { encoding?: null; flag?: string }) {
+	},
+	readTxtFile(p: string, options?: { encoding?: null; flag?: string }) {
 		return fs.readFileSync(p, options).toString();
-	}
-	public static readJSONFile(p: string, options?: { encoding?: null; flag?: string }) {
-		let content = fs.readFileSync(p, options).toString();
+	},
+	readJSONFile(p: string, options?: { encoding?: null; flag?: string }) {
+		const content = fs.readFileSync(p, options).toString();
 		return content ? JSON.parse(content) : undefined;
-	}
-}
+	},
+};

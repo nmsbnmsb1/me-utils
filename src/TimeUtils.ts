@@ -21,22 +21,24 @@
 //     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-import { ObjectUtils } from './ObjectUtils';
 import ms from 'ms';
+import { ObjectUtils } from './ObjectUtils';
 
-export class TimeUtils {
-	public static timeout(time: number = 1000) {
+export const TimeUtils = {
+	timeout(time = 1000) {
 		return new Promise((resolve) => {
 			setTimeout(resolve, time);
 		});
-	}
+	},
 
-	public static async sleep(time: number) {
+	async sleep(time: number) {
 		await new Promise((resolve) => setTimeout(resolve, time));
-	}
+	},
 
-	public static datetime(date: Date | string = new Date(), format: string) {
-		if (date && ObjectUtils.isString(date)) {
+	datetime(date: Date | string, format: string) {
+		if (!date) {
+			date = new Date();
+		} else if (ObjectUtils.isString(date)) {
 			const dateString = date as string;
 			date = new Date(Date.parse(dateString));
 
@@ -47,10 +49,7 @@ export class TimeUtils {
 		}
 		format = format || 'YYYY-MM-DD HH:mm:ss';
 
-		const fn = (d: number) => {
-			return ('0' + d).slice(-2);
-		};
-
+		const fn = (d: number) => `0${d}`.slice(-2);
 		const d = new Date(date);
 		const formats: any = {
 			YYYY: d.getFullYear(),
@@ -64,14 +63,14 @@ export class TimeUtils {
 		return format.replace(/([a-z])\1+/gi, (a) => {
 			return formats[a] || a;
 		});
-	}
+	},
 
-	public static ms(time: any) {
+	ms(time: any) {
 		if (typeof time === 'number') return time;
 		const result = ms(time);
 		if (result === undefined) {
 			throw new Error(`ms('${time}') result is undefined`);
 		}
 		return result;
-	}
-}
+	},
+};

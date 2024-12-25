@@ -1,6 +1,6 @@
-import net from 'net';
-export declare class NetUtils {
-    static isIP: typeof net.isIP;
-    static isIPv4: typeof net.isIPv4;
-    static isIPv6: typeof net.isIPv6;
-}
+import net from 'node:net';
+export declare const NetUtils: {
+    isIP: typeof net.isIP;
+    isIPv4: typeof net.isIPv4;
+    isIPv6: typeof net.isIPv6;
+};

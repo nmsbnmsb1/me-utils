@@ -25,9 +25,9 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { ObjectUtils } from './ObjectUtils';
 
-const fsRmdir = ObjectUtils.promisify(fs.rmdir, fs);
-const fsUnlink = ObjectUtils.promisify(fs.unlink, fs);
-const fsReaddir = ObjectUtils.promisify(fs.readdir, fs);
+// const fsRmdir = ObjectUtils.promisify(fs.rmdir, fs);
+// const fsUnlink = ObjectUtils.promisify(fs.unlink, fs);
+// const fsReaddir = ObjectUtils.promisify(fs.readdir, fs);
 
 export const FileUtils = {
 	isExist(p: string) {
@@ -178,28 +178,27 @@ export const FileUtils = {
 		}
 	},
 	//删除
-	async rmdir(p: string, reserve: any = false) {
-		if (!FileUtils.isDirectory(p)) return Promise.resolve();
-		return fsReaddir(p).then((files: any) => {
-			const promises = files.map((item: any) => {
-				const filepath = path.join(p, item);
-				if (FileUtils.isDirectory(filepath)) return FileUtils.rmdir(filepath, false);
-				return fsUnlink(filepath);
-			});
-			return Promise.all(promises).then(() => {
-				if (!reserve) return fsRmdir(p);
-			});
-		});
+	rm(p: string, reserve: any = false) {
+		if (FileUtils.isDirectory(p)) return;
+		fs.unlinkSync(p);
+		if (!reserve) {
+			let dirname = path.dirname(p);
+			if (fs.readdirSync(dirname).length <= 0) {
+				fs.unlinkSync(dirname);
+			}
+		}
 	},
-	async rm(p: string, reserve: any = false) {
-		if (FileUtils.isDirectory(p)) return Promise.resolve();
-		return fsUnlink(p).then(() => {
-			if (!reserve) {
-				const dirname = path.dirname(p);
-				const dirs = fs.readdirSync(dirname);
-				if (dirs.length <= 0) return fsUnlink(dirname);
+	rmdir(p: string, reserve: any = false) {
+		if (!FileUtils.isDirectory(p)) return;
+		fs.readdirSync(p).map((item: any) => {
+			let filepath = path.join(p, item);
+			if (FileUtils.isDirectory(filepath)) {
+				FileUtils.rmdir(filepath, false);
+			} else {
+				fs.unlinkSync(filepath);
 			}
 		});
+		if (!reserve) return fs.rmdirSync(p);
 	},
 	//文件读写
 	writeFile(p: string, data: any, options?: fs.WriteFileOptions) {

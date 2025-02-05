@@ -13,8 +13,8 @@ export declare const FileUtils: {
         srcExists: boolean;
         destIsFile: boolean;
     }): void;
-    rmdir(p: string, reserve?: any): Promise<unknown>;
-    rm(p: string, reserve?: any): Promise<unknown>;
+    rm(p: string, reserve?: any): void;
+    rmdir(p: string, reserve?: any): void;
     writeFile(p: string, data: any, options?: fs.WriteFileOptions): void;
     writeJSONFile(p: string, data: any, jsonSpace?: number, options?: fs.WriteFileOptions): void;
     readFile(p: string, options?: {

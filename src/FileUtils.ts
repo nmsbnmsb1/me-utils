@@ -137,18 +137,19 @@ export const FileUtils = {
 		existsPolicy: 'replace' | 'rename' | 'raiseExecption' | 'mergeReplace' | 'mergeRename' | 'mergeRaiseExecption',
 		options: { srcExists: boolean; destIsFile: boolean } = {} as any
 	) {
+		//如果来源和目标相同
+		if (src === dest) return;
 		//如果src不存在，则直接退出
 		if (options.srcExists === undefined && !FileUtils.isExist(src)) return;
 		//如果目标位置不存在，直接移动即可
 		if (!FileUtils.isExist(dest)) {
 			let destParent = path.dirname(dest);
-			if (!FileUtils.isExist(destParent)) FileUtils.mkdir(path.dirname(dest), 0o777);
+			if (!FileUtils.isExist(destParent)) FileUtils.mkdir(destParent, 0o777);
 			fs.renameSync(src, dest);
 			return;
 		}
 		//dest路径已存在
 		if (existsPolicy === 'raiseExecption') throw new Error(`${dest} is exists`);
-		//
 		if (options.destIsFile === undefined) options.destIsFile = FileUtils.isFile(dest);
 		if (existsPolicy === 'replace') {
 			fs.rmSync(dest, { recursive: true, force: true });

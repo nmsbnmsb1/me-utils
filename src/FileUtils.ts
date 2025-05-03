@@ -138,7 +138,7 @@ export const FileUtils = {
 		options: { srcExists: boolean; destIsFile: boolean } = {} as any
 	) {
 		//如果来源和目标相同
-		if (src === dest) return;
+		if (src === dest) return dest;
 		//如果src不存在，则直接退出
 		if (options.srcExists === undefined && !FileUtils.isExist(src)) return;
 		//如果目标位置不存在，直接移动即可
@@ -146,7 +146,7 @@ export const FileUtils = {
 			let destParent = path.dirname(dest);
 			if (!FileUtils.isExist(destParent)) FileUtils.mkdir(destParent, 0o777);
 			fs.renameSync(src, dest);
-			return;
+			return dest;
 		}
 		//dest路径已存在
 		if (existsPolicy === 'raiseExecption') throw new Error(`${dest} is exists`);
@@ -154,20 +154,24 @@ export const FileUtils = {
 		if (existsPolicy === 'replace') {
 			fs.rmSync(dest, { recursive: true, force: true });
 			fs.renameSync(src, dest);
-		} else if (existsPolicy === 'rename') {
+			return dest;
+		}
+		if (existsPolicy === 'rename') {
 			let descNew = '';
 			let destParent = path.dirname(dest);
 			let destName = path.basename(dest);
 			let descExt = options.destIsFile ? path.extname(dest) : '';
 			let descCounter = 1;
 			while (true) {
-				descNew = path.join(destParent, `${destName}_${descCounter}${descExt}`);
+				descNew = path.join(destParent, `${destName}_${`${descCounter}`.padStart(2, '0')}${descExt}`);
 				if (!FileUtils.isExist(descNew)) break;
 				descCounter++;
 			}
 			fs.renameSync(src, descNew);
-		} else if (!options.destIsFile && existsPolicy.startsWith('merge')) {
-			//只有文件夹才能合并
+			return descNew;
+		}
+		//只有文件夹才能合并
+		if (!options.destIsFile && existsPolicy.startsWith('merge')) {
 			let fileExistsPolicy: any = existsPolicy.replace('merge', '');
 			fileExistsPolicy = `${fileExistsPolicy[0].toLowerCase()}${fileExistsPolicy.substring(1)}`;
 			let fileRenameOptions = { srcExists: true, destIsFile: true };
@@ -176,6 +180,8 @@ export const FileUtils = {
 			}
 			//删除原始文件夹
 			fs.rmSync(src, { recursive: true, force: true });
+			//
+			return dest;
 		}
 	},
 	//删除

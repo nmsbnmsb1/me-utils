@@ -12,7 +12,7 @@ export declare const FileUtils: {
     rename(src: string, dest: string, existsPolicy: "replace" | "rename" | "raiseExecption" | "mergeReplace" | "mergeRename" | "mergeRaiseExecption", options?: {
         srcExists: boolean;
         destIsFile: boolean;
-    }): void;
+    }): string;
     rm(p: string, reserve?: any): void;
     rmdir(p: string, reserve?: any): void;
     writeFile(p: string, data: any, options?: fs.WriteFileOptions): void;

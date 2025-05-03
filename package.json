@@ -1,6 +1,6 @@
 {
 	"name": "me-utils",
-	"version": "2.0.8",
+	"version": "2.0.9",
 	"//type": "module",
 	"main": "lib/index.js",
 	"module": "lib/browser/index.js",
@@ -29,10 +29,10 @@
 		"@rollup/plugin-replace": "^6.0.2",
 		"@types/js-md5": "^0.7.2",
 		"@types/ms": "^2.1.0",
-		"@types/node": "^22.13.10",
+		"@types/node": "^22.15.3",
 		"@types/uuid": "^10.0.0",
-		"rollup": "^4.36.0",
+		"rollup": "^4.40.1",
 		"rollup-plugin-typescript2": "^0.36.0",
-		"typescript": "^5.8.2"
+		"typescript": "^5.8.3"
 	}
 }

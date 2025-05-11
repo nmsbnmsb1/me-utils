@@ -19,7 +19,6 @@ export declare const ObjectUtils: {
     isAsyncFcuntion(fn: any): boolean;
     isPrimitive(arg: any): boolean;
     isBuffer(arg: any): arg is Buffer<ArrayBufferLike>;
-    promisify(fn: any, receiver: any): (...args: any) => Promise<unknown>;
     defer(): any;
     extend(target?: any, ...args: any): any;
     isTrueEmpty(obj: any): boolean;

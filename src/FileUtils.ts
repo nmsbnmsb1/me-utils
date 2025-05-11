@@ -23,80 +23,94 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
+
 import { ObjectUtils } from './ObjectUtils';
 
-// const fsRmdir = ObjectUtils.promisify(fs.rmdir, fs);
-// const fsUnlink = ObjectUtils.promisify(fs.unlink, fs);
-// const fsReaddir = ObjectUtils.promisify(fs.readdir, fs);
+// export const fsMkdir = ObjectUtils.promisify(fs.mkdir, fs);
+// export const fsStat = ObjectUtils.promisify(fs.stat, fs);
+// export const fsUnlink = ObjectUtils.promisify(fs.unlink, fs);
+// export const fsRm = ObjectUtils.promisify(fs.rm, fs);
+// export const fsReaddir = ObjectUtils.promisify(fs.readdir, fs);
+// export const fsRename = ObjectUtils.promisify(fs.rename, fs);
+// export const fsReadFile = ObjectUtils.promisify(fs.readFile, fs);
+// export const fsWriteFile = ObjectUtils.promisify(fs.writeFile, fs);
+const fnMap = new Map();
+export const fsPromisify = (fn: any, ...args: any) => {
+	let pfn = fnMap.get(fn);
+	if (!pfn) {
+		pfn = (...args: any) => {
+			return new Promise((resolve, reject) => {
+				fn.apply(fs, [
+					...args,
+					(err: any, res: any) => {
+						//fs.exists API 会返回true
+						if (err === true) {
+							resolve(true);
+						} else {
+							!err ? resolve(res) : reject(err);
+						}
+					},
+				]);
+			});
+		};
+		fnMap.set(fn, pfn);
+	}
+	return pfn(...args);
+};
 
 export const FileUtils = {
-	isExist(p: string) {
+	async isExist(p: string): Promise<boolean> {
 		p = path.normalize(p);
-		try {
-			fs.accessSync(p, fs.constants.R_OK);
-			return true;
-		} catch (e) {
-			return false;
-		}
+		return new Promise((resolve) => fs.access(p, fs.constants.F_OK, (err) => resolve(!err)));
 	},
-	isFile(filePath: string) {
-		if (!FileUtils.isExist(filePath)) return false;
-		try {
-			const stat = fs.statSync(filePath);
-			return stat.isFile();
-		} catch (e) {
-			return false;
-		}
+	async isFile(filePath: string): Promise<boolean> {
+		return new Promise((resolve) => {
+			fs.stat(filePath, (err, stats) => resolve(err || !stats ? false : stats.isFile()));
+		});
 	},
-	isDirectory(dirPath: string) {
-		if (!FileUtils.isExist(dirPath)) return false;
-		try {
-			const stat = fs.statSync(dirPath);
-			return stat.isDirectory();
-		} catch (e) {
-			return false;
-		}
+	async isDirectory(dirPath: string): Promise<boolean> {
+		return new Promise((resolve) => {
+			fs.stat(dirPath, (err, stats) => {
+				resolve(err || !stats ? false : stats.isDirectory());
+			});
+		});
 	},
 	//
-	mkdir(dir: string, mode?: string | number): boolean {
-		if (FileUtils.isExist(dir)) {
-			if (mode) return FileUtils.chmod(dir, mode);
-			return true;
-		}
-		const pp = path.dirname(dir);
-		if (FileUtils.isExist(pp)) {
-			try {
-				fs.mkdirSync(dir, mode);
-				if (mode) FileUtils.chmod(dir, mode);
-				return true;
-			} catch (e) {
-				return false;
-			}
-		}
-		if (FileUtils.mkdir(pp, mode)) return FileUtils.mkdir(dir, mode);
-		return false;
+	async chmod(p: fs.PathLike, mode: string | number): Promise<boolean> {
+		return new Promise((resolve) => {
+			fs.chmod(p, mode, (err) => resolve(!err));
+		});
 	},
-	chmod(p: fs.PathLike, mode: string | number) {
+	async mkdir(dir: string, mode?: string | number): Promise<boolean> {
 		try {
-			fs.chmodSync(p, mode);
-			return true;
+			await fsPromisify(fs.mkdir, dir, { recursive: true });
 		} catch (e) {
 			return false;
 		}
+		//
+		if (mode) await FileUtils.chmod(dir, mode);
+		//
+		return true;
 	},
-	getdirFiles(dir: string, prefix = '') {
+	async getdirFiles(dir: string, prefix = ''): Promise<string[]> {
 		dir = path.normalize(dir);
-		if (!fs.existsSync(dir)) return [];
-		let files = fs.readdirSync(dir);
-		let result: any[] = [];
+		//
+		let files: string[];
+		try {
+			files = (await fsPromisify(fs.readdir, dir)) as string[];
+		} catch (e) {
+			if (e.code === 'ENOENT') return [];
+			throw e;
+		}
+		//
+		const result: any[] = [];
 		for (const item of files) {
 			const currentDir = path.join(dir, item);
-			const stat = fs.statSync(currentDir);
+			const stat = (await fsPromisify(fs.stat, currentDir)) as fs.Stats;
 			if (stat.isFile()) {
 				result.push(path.join(prefix, item));
 			} else if (stat.isDirectory()) {
-				const cFiles = FileUtils.getdirFiles(currentDir, path.join(prefix, item));
-				result = result.concat(cFiles);
+				result.push(...(await FileUtils.getdirFiles(currentDir, path.join(prefix, item))));
 			}
 		}
 		return result;
@@ -131,29 +145,56 @@ export const FileUtils = {
 		return ns;
 	},
 	//移动文件/文件夹
-	rename(
+	async unlink(p: string) {
+		try {
+			await fsPromisify(fs.unlink, p);
+		} catch (e) {
+			return false;
+		}
+		return true;
+	},
+	async rmdir(p: string, reserve = false): Promise<boolean> {
+		if (!(await FileUtils.isDirectory(p))) return false;
+		//
+		let rm = async (dirPath: string, reserve: boolean) => {
+			let files = (await fsPromisify(fs.readdir, dirPath)) as string[];
+			for (let item of files) {
+				let filepath = path.join(dirPath, item);
+				if (await FileUtils.isDirectory(filepath)) {
+					await rm(filepath, false);
+				} else {
+					await fsPromisify(fs.unlink, filepath);
+				}
+			}
+			if (!reserve) await fsPromisify(fs.rm, dirPath, { recursive: true, force: true });
+		};
+		await rm(p, reserve);
+		//
+		return true;
+	},
+	async rename(
 		src: string, //可能是文件或者文件夹
 		dest: string,
 		existsPolicy: 'replace' | 'rename' | 'raiseExecption' | 'mergeReplace' | 'mergeRename' | 'mergeRaiseExecption',
 		options: { srcExists: boolean; destIsFile: boolean } = {} as any
-	) {
+	): Promise<string | undefined> {
 		//如果来源和目标相同
 		if (src === dest) return dest;
 		//如果src不存在，则直接退出
-		if (options.srcExists === undefined && !FileUtils.isExist(src)) return;
+		if (options.srcExists === undefined && !(await FileUtils.isExist(src))) return;
 		//如果目标位置不存在，直接移动即可
-		if (!FileUtils.isExist(dest)) {
-			let destParent = path.dirname(dest);
-			if (!FileUtils.isExist(destParent)) FileUtils.mkdir(destParent, 0o777);
-			fs.renameSync(src, dest);
+		if (!(await FileUtils.isExist(dest))) {
+			const destParent = path.dirname(dest);
+			await FileUtils.mkdir(destParent, 0o777);
+			await fsPromisify(fs.rename, src, dest);
 			return dest;
 		}
 		//dest路径已存在
 		if (existsPolicy === 'raiseExecption') throw new Error(`${dest} is exists`);
-		if (options.destIsFile === undefined) options.destIsFile = FileUtils.isFile(dest);
+		if (options.destIsFile === undefined) options.destIsFile = await FileUtils.isFile(dest);
 		if (existsPolicy === 'replace') {
-			fs.rmSync(dest, { recursive: true, force: true });
-			fs.renameSync(src, dest);
+			await (options.destIsFile ? FileUtils.unlink(dest) : FileUtils.rmdir(dest));
+			await fsPromisify(fs.rename, src, dest);
 			return dest;
 		}
 		if (existsPolicy === 'rename') {
@@ -164,67 +205,48 @@ export const FileUtils = {
 			let descCounter = 1;
 			while (true) {
 				descNew = path.join(destParent, `${destName}_${`${descCounter}`.padStart(2, '0')}${descExt}`);
-				if (!FileUtils.isExist(descNew)) break;
+				if (!(await FileUtils.isExist(descNew))) break;
 				descCounter++;
 			}
-			fs.renameSync(src, descNew);
+			await fsPromisify(fs.rename, src, descNew);
 			return descNew;
 		}
 		//只有文件夹才能合并
 		if (!options.destIsFile && existsPolicy.startsWith('merge')) {
 			let fileExistsPolicy: any = existsPolicy.replace('merge', '');
 			fileExistsPolicy = `${fileExistsPolicy[0].toLowerCase()}${fileExistsPolicy.substring(1)}`;
-			let fileRenameOptions = { srcExists: true, destIsFile: true };
-			for (let srcFile of FileUtils.getdirFiles(src)) {
-				FileUtils.rename(path.join(src, srcFile), path.join(dest, srcFile), fileExistsPolicy, fileRenameOptions);
+			const fileRenameOptions = { srcExists: true, destIsFile: true };
+			const all = [];
+			for (const srcFile of await FileUtils.getdirFiles(src)) {
+				all.push(
+					FileUtils.rename(path.join(src, srcFile), path.join(dest, srcFile), fileExistsPolicy, fileRenameOptions)
+				);
 			}
+			await Promise.all(all);
 			//删除原始文件夹
-			fs.rmSync(src, { recursive: true, force: true });
+			await FileUtils.rmdir(src, false);
 			//
 			return dest;
 		}
 	},
-	//删除
-	rm(p: string, reserve: any = false) {
-		if (FileUtils.isDirectory(p)) return;
-		fs.unlinkSync(p);
-		if (!reserve) {
-			let dirname = path.dirname(p);
-			if (fs.readdirSync(dirname).length <= 0) {
-				fs.unlinkSync(dirname);
-			}
-		}
-	},
-	rmdir(p: string, reserve: any = false) {
-		if (!FileUtils.isDirectory(p)) return;
-		fs.readdirSync(p).map((item: any) => {
-			let filepath = path.join(p, item);
-			if (FileUtils.isDirectory(filepath)) {
-				FileUtils.rmdir(filepath, false);
-			} else {
-				fs.unlinkSync(filepath);
-			}
-		});
-		if (!reserve) return fs.rmdirSync(p);
-	},
 	//文件读写
-	writeFile(p: string, data: any, options?: fs.WriteFileOptions) {
+	async writeFile(p: string, data: any, options?: fs.WriteFileOptions) {
 		let mode: any;
 		if (options && typeof options !== 'string' && options.mode !== undefined) mode = options.mode;
-		FileUtils.mkdir(path.dirname(p), mode);
-		fs.writeFileSync(p, data, options);
+		await FileUtils.mkdir(path.dirname(p), mode);
+		await fsPromisify(fs.writeFile, p, data, options);
 	},
-	writeJSONFile(p: string, data: any, jsonSpace?: number, options?: fs.WriteFileOptions) {
-		FileUtils.writeFile(p, JSON.stringify(data, undefined, jsonSpace), options);
+	async writeJSONFile(p: string, data: any, jsonSpace?: number, options?: fs.WriteFileOptions) {
+		return FileUtils.writeFile(p, JSON.stringify(data, undefined, jsonSpace), options);
 	},
-	readFile(p: string, options?: { encoding?: null; flag?: string }) {
-		return fs.readFileSync(p, options);
+	async readFile(p: string, options?: { encoding?: null; flag?: string }): Promise<any> {
+		return fsPromisify(fs.readFile, p, options);
 	},
-	readTxtFile(p: string, options?: { encoding?: null; flag?: string }) {
-		return fs.readFileSync(p, options).toString();
+	async readTxtFile(p: string, options?: { encoding?: null; flag?: string }) {
+		return (await fsPromisify(fs.readFile, p, options)).toString();
 	},
-	readJSONFile(p: string, options?: { encoding?: null; flag?: string }) {
-		const content = fs.readFileSync(p, options).toString();
+	async readJSONFile(p: string, options?: { encoding?: null; flag?: string }): Promise<any> {
+		const content = (await fsPromisify(fs.readFile, p, options)).toString();
 		return content ? JSON.parse(content) : undefined;
 	},
 };

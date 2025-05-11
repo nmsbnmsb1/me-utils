@@ -125,18 +125,6 @@ export const ObjectUtils = {
 	},
 
 	// 把一个方法Promise化
-	promisify(fn: any, receiver: any) {
-		return (...args: any) => {
-			return new Promise((resolve, reject) => {
-				fn.apply(receiver, [
-					...args,
-					(err: any, res: any) => {
-						return err ? reject(err) : resolve(res);
-					},
-				]);
-			});
-		};
-	},
 	defer() {
 		const deferred: any = {};
 		deferred.promise = new Promise((resolve, reject) => {

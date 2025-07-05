@@ -18,7 +18,7 @@ export declare const ObjectUtils: {
     isFunction(arg: any): boolean;
     isAsyncFcuntion(fn: any): boolean;
     isPrimitive(arg: any): boolean;
-    isBuffer(arg: any): arg is Buffer<ArrayBufferLike>;
+    isBuffer(arg: any): any;
     defer(): any;
     extend(target?: any, ...args: any): any;
     isTrueEmpty(obj: any): boolean;

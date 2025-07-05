@@ -1,116 +1,159 @@
-// https://github.com/thinkjs/think-helper#43d7b132a47248ebb403a01901936c480906e8a0
-// The MIT License(MIT)
-
-// Copyright(c) 2017 ThinkJS
-
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files(the "Software"), to deal
-//     in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and / or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-//     FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-//     OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
-
-import fs from 'node:fs';
+import type fs from 'node:fs';
+import fsPromises from 'node:fs/promises';
 import path from 'node:path';
 
-import { ObjectUtils } from './ObjectUtils';
-
-// export const fsMkdir = ObjectUtils.promisify(fs.mkdir, fs);
-// export const fsStat = ObjectUtils.promisify(fs.stat, fs);
-// export const fsUnlink = ObjectUtils.promisify(fs.unlink, fs);
-// export const fsRm = ObjectUtils.promisify(fs.rm, fs);
-// export const fsReaddir = ObjectUtils.promisify(fs.readdir, fs);
-// export const fsRename = ObjectUtils.promisify(fs.rename, fs);
-// export const fsReadFile = ObjectUtils.promisify(fs.readFile, fs);
-// export const fsWriteFile = ObjectUtils.promisify(fs.writeFile, fs);
-const fnMap = new Map();
-export const fsPromisify = (fn: any, ...args: any) => {
-	let pfn = fnMap.get(fn);
-	if (!pfn) {
-		pfn = (...args: any) => {
-			return new Promise((resolve, reject) => {
-				fn.apply(fs, [
-					...args,
-					(err: any, res: any) => {
-						//fs.exists API 会返回true
-						if (err === true) {
-							resolve(true);
-						} else {
-							!err ? resolve(res) : reject(err);
-						}
-					},
-				]);
-			});
-		};
-		fnMap.set(fn, pfn);
-	}
-	return pfn(...args);
-};
-
 export const FileUtils = {
-	async isExist(p: string): Promise<boolean> {
-		p = path.normalize(p);
-		return new Promise((resolve) => fs.access(p, fs.constants.F_OK, (err) => resolve(!err)));
+	//获取文件类型
+	async getFileType(
+		p: string,
+		resolveSymlink = false
+	): Promise<
+		| 'not-exist'
+		| 'symlink'
+		| 'symlink-not-exist'
+		| 'symlink-file'
+		| 'symlink-directory'
+		| 'symlink-socket'
+		| 'symlink-fifo'
+		| 'symlink-character-device'
+		| 'symlink-block-device'
+		| 'symlink-unknown'
+		| 'file'
+		| 'directory'
+		| 'socket'
+		| 'fifo'
+		| 'character-device'
+		| 'block-device'
+		| 'unknown'
+	> {
+		try {
+			const stats = await fsPromises.lstat(p);
+
+			// 如果是符号链接
+			if (stats.isSymbolicLink()) {
+				if (!resolveSymlink) return 'symlink';
+				// 如果需要跟踪符号链接，获取目标文件的信息
+				try {
+					const targetStats = await fsPromises.stat(p);
+					if (targetStats.isFile()) return 'symlink-file';
+					if (targetStats.isDirectory()) return 'symlink-directory';
+					if (targetStats.isSocket()) return 'symlink-socket';
+					if (targetStats.isFIFO()) return 'symlink-fifo';
+					if (targetStats.isCharacterDevice()) return 'symlink-character-device';
+					if (targetStats.isBlockDevice()) return 'symlink-block-device';
+					return 'symlink-unknown';
+				} catch (err) {
+					if (err.code === 'ENOENT') return 'symlink-not-exist';
+					throw err;
+				}
+			}
+
+			// 如果不是符号链接，直接返回文件类型
+
+			if (stats.isFile()) return 'file';
+			if (stats.isDirectory()) return 'directory';
+			if (stats.isSocket()) return 'socket';
+			if (stats.isFIFO()) return 'fifo';
+			if (stats.isCharacterDevice()) return 'character-device';
+			if (stats.isBlockDevice()) return 'block-device';
+			return 'unknown';
+		} catch (err) {
+			if (err.code === 'ENOENT') return 'not-exist';
+			throw err;
+		}
 	},
-	async isFile(filePath: string): Promise<boolean> {
-		return new Promise((resolve) => {
-			fs.stat(filePath, (err, stats) => resolve(err || !stats ? false : stats.isFile()));
-		});
+	async isSymLink(p: string): Promise<boolean | null> {
+		let fileType = await FileUtils.getFileType(p, false);
+		if (fileType === 'not-exist') return null;
+		if (fileType === 'symlink') return true;
+		return false;
 	},
-	async isDirectory(dirPath: string): Promise<boolean> {
-		return new Promise((resolve) => {
-			fs.stat(dirPath, (err, stats) => {
-				resolve(err || !stats ? false : stats.isDirectory());
-			});
-		});
+	async isFile(p: string, resolveSymlink = true): Promise<boolean | null> {
+		let fileType = await FileUtils.getFileType(p, true);
+		if (fileType === 'not-exist') return null;
+		if (fileType === 'symlink-not-exist') return resolveSymlink ? null : false;
+		if (fileType === 'file') return true;
+		//biome-ignore lint/complexity/noUselessTernary:
+		if (fileType === 'symlink-file') return resolveSymlink ? true : false;
+		return false;
+	},
+	async isDirectory(p: string, resolveSymlink = true): Promise<boolean | null> {
+		let fileType = await FileUtils.getFileType(p, true);
+		if (fileType === 'not-exist') return null;
+		if (fileType === 'symlink-not-exist') return resolveSymlink ? null : false;
+		if (fileType === 'directory') return true;
+		//biome-ignore lint/complexity/noUselessTernary:
+		if (fileType === 'symlink-directory') return resolveSymlink ? true : false;
+		return false;
+	},
+	async isExist(p: string, resolveSymlink = true): Promise<boolean> {
+		let fileType = await FileUtils.getFileType(p, true);
+		if (fileType === 'not-exist') return false;
+		//biome-ignore lint/complexity/noUselessTernary:
+		if (fileType === 'symlink-not-exist') return resolveSymlink ? false : true;
+		return true;
 	},
 	//
-	async chmod(p: fs.PathLike, mode: string | number): Promise<boolean> {
-		return new Promise((resolve) => {
-			fs.chmod(p, mode, (err) => resolve(!err));
-		});
-	},
-	async mkdir(dir: string, mode?: string | number): Promise<boolean> {
+	async chmod(p: string, mode: string | number): Promise<boolean> {
 		try {
-			await fsPromisify(fs.mkdir, dir, { recursive: true });
+			await fsPromises.chmod(p, mode);
+			return true;
+		} catch (e) {}
+		return false;
+	},
+	async mkdir(p: string, mode?: string | number): Promise<boolean> {
+		try {
+			await fsPromises.mkdir(p, { recursive: true });
 		} catch (e) {
 			return false;
 		}
 		//
-		if (mode) await FileUtils.chmod(dir, mode);
+		if (mode) await FileUtils.chmod(p, mode);
 		//
 		return true;
 	},
-	async getdirFiles(dir: string, prefix = ''): Promise<string[]> {
-		dir = path.normalize(dir);
-		//
+	async getdirFiles(
+		p: string,
+		prefix = '',
+		ignores: any = undefined,
+		maxDepth = Number.POSITIVE_INFINITY,
+		depth = 1
+	): Promise<string[]> {
 		let files: string[];
 		try {
-			files = (await fsPromisify(fs.readdir, dir)) as string[];
+			files = await fsPromises.readdir(p);
 		} catch (e) {
 			if (e.code === 'ENOENT') return [];
 			throw e;
 		}
 		//
-		const result: any[] = [];
-		for (const item of files) {
-			const currentDir = path.join(dir, item);
-			const stat = (await fsPromisify(fs.stat, currentDir)) as fs.Stats;
-			if (stat.isFile()) {
-				result.push(path.join(prefix, item));
-			} else if (stat.isDirectory()) {
-				result.push(...(await FileUtils.getdirFiles(currentDir, path.join(prefix, item))));
+		let result: string[] = [];
+		for (let f of files) {
+			let currentDir = path.join(p, f);
+			let stat = await fsPromises.lstat(currentDir);
+			if (stat.isDirectory()) {
+				if (depth < maxDepth) {
+					result.push(...(await FileUtils.getdirFiles(currentDir, path.join(prefix, f), ignores, maxDepth, depth + 1)));
+				}
+			} else {
+				if (ignores?.length) {
+					let shouldIgnore = false;
+					for (let ignore of ignores) {
+						if (typeof ignore === 'string') {
+							if (f === ignore || f.endsWith(ignore)) {
+								shouldIgnore = true;
+								break;
+							}
+						} else if (ignore instanceof RegExp) {
+							if (ignore.test(f)) {
+								shouldIgnore = true;
+								break;
+							}
+						}
+					}
+					if (shouldIgnore) continue;
+				}
+				result.push(path.join(prefix, f));
 			}
 		}
 		return result;
@@ -144,87 +187,95 @@ export const FileUtils = {
 		}
 		return ns;
 	},
-	//移动文件/文件夹
-	async unlink(p: string) {
+	//删除文件/文件夹
+	async rm(p: string, rmEmptyDirOnly = false): Promise<boolean> {
+		const fileType = await this.getFileType(p, false);
+
+		// 1. 目录 & 只删空目录 模式
+		if (fileType === 'directory' && rmEmptyDirOnly) {
+			try {
+				// rmdir 只会删除空目录，目录非空则抛 ENOTEMPTY
+				await fsPromises.rmdir(p);
+				return true;
+			} catch (err: any) {
+				// 删除失败（可能非空、权限等），都返回 false
+				return false;
+			}
+		}
+
+		// 2. 其它情况：文件、链接，或递归强制删除目录
 		try {
-			await fsPromisify(fs.unlink, p);
-		} catch (e) {
+			await fsPromises.rm(p, { recursive: true, force: true });
+			return true;
+		} catch (err: any) {
 			return false;
 		}
-		return true;
-	},
-	async rmdir(p: string, reserve = false): Promise<boolean> {
-		if (!(await FileUtils.isDirectory(p))) return false;
-		//
-		let rm = async (dirPath: string, reserve: boolean) => {
-			let files = (await fsPromisify(fs.readdir, dirPath)) as string[];
-			for (let item of files) {
-				let filepath = path.join(dirPath, item);
-				if (await FileUtils.isDirectory(filepath)) {
-					await rm(filepath, false);
-				} else {
-					await fsPromisify(fs.unlink, filepath);
-				}
-			}
-			if (!reserve) await fsPromisify(fs.rm, dirPath, { recursive: true, force: true });
-		};
-		await rm(p, reserve);
-		//
-		return true;
 	},
 	async rename(
 		src: string, //可能是文件或者文件夹
 		dest: string,
 		existsPolicy: 'replace' | 'rename' | 'raiseExecption' | 'mergeReplace' | 'mergeRename' | 'mergeRaiseExecption',
-		options: { srcExists: boolean; destIsFile: boolean } = {} as any
+		{ srcType, destType }: { srcType: any; destType: any } = {} as any
 	): Promise<string | undefined> {
 		//如果来源和目标相同
 		if (src === dest) return dest;
 		//如果src不存在，则直接退出
-		if (options.srcExists === undefined && !(await FileUtils.isExist(src))) return;
+		if (srcType === undefined) srcType = await FileUtils.getFileType(src, false);
+		if (srcType === 'not-exist') return;
 		//如果目标位置不存在，直接移动即可
-		if (!(await FileUtils.isExist(dest))) {
-			const destParent = path.dirname(dest);
-			await FileUtils.mkdir(destParent, 0o777);
-			await fsPromisify(fs.rename, src, dest);
+		if (destType === undefined) destType = await FileUtils.getFileType(dest, false);
+		if (destType === 'not-exist') {
+			await FileUtils.mkdir(path.dirname(dest), 0o777);
+			await fsPromises.rename(src, dest);
 			return dest;
 		}
 		//dest路径已存在
 		if (existsPolicy === 'raiseExecption') throw new Error(`${dest} is exists`);
-		if (options.destIsFile === undefined) options.destIsFile = await FileUtils.isFile(dest);
 		if (existsPolicy === 'replace') {
-			await (options.destIsFile ? FileUtils.unlink(dest) : FileUtils.rmdir(dest));
-			await fsPromisify(fs.rename, src, dest);
+			await FileUtils.rm(dest, false);
+			await fsPromises.rename(src, dest);
 			return dest;
 		}
 		if (existsPolicy === 'rename') {
 			let descNew = '';
-			let destParent = path.dirname(dest);
-			let destName = path.basename(dest);
-			let descExt = options.destIsFile ? path.extname(dest) : '';
+			//
+			let destPathObject = path.parse(dest);
+			let destCombinds = [];
+			if (srcType !== 'directory') {
+				destCombinds[0] = `${destPathObject.name}`;
+				destCombinds[2] = `${destPathObject.ext}`;
+			} else {
+				destCombinds[0] = `${destPathObject.base}`;
+			}
 			let descCounter = 1;
 			while (true) {
-				descNew = path.join(destParent, `${destName}_${`${descCounter}`.padStart(2, '0')}${descExt}`);
+				destCombinds[1] = `_${`${descCounter}`.padStart(2, '0')}`;
+				descNew = path.join(destPathObject.dir, destCombinds.join(''));
 				if (!(await FileUtils.isExist(descNew))) break;
 				descCounter++;
 			}
-			await fsPromisify(fs.rename, src, descNew);
+			await fsPromises.rename(src, descNew);
 			return descNew;
 		}
-		//只有文件夹才能合并
-		if (!options.destIsFile && existsPolicy.startsWith('merge')) {
+		//
+		if (srcType === 'directory' && srcType === destType && existsPolicy.startsWith('merge')) {
 			let fileExistsPolicy: any = existsPolicy.replace('merge', '');
 			fileExistsPolicy = `${fileExistsPolicy[0].toLowerCase()}${fileExistsPolicy.substring(1)}`;
-			const fileRenameOptions = { srcExists: true, destIsFile: true };
-			const all = [];
-			for (const srcFile of await FileUtils.getdirFiles(src)) {
-				all.push(
-					FileUtils.rename(path.join(src, srcFile), path.join(dest, srcFile), fileExistsPolicy, fileRenameOptions)
-				);
+			//
+			for (let file of await fsPromises.readdir(src)) {
+				let srcPath = path.resolve(src, file);
+				let destPath = path.resolve(dest, file);
+				let options = {
+					srcType: await FileUtils.getFileType(srcPath),
+					destType: await FileUtils.getFileType(destPath),
+				};
+				let policy = fileExistsPolicy;
+				if (options.srcType === 'directory' && options.srcType === options.destType) policy = existsPolicy;
+				//console.log(srcPath, destPath, policy, options);
+				await FileUtils.rename(srcPath, destPath, policy, options);
 			}
-			await Promise.all(all);
 			//删除原始文件夹
-			await FileUtils.rmdir(src, false);
+			await FileUtils.rm(src, false);
 			//
 			return dest;
 		}
@@ -234,19 +285,19 @@ export const FileUtils = {
 		let mode: any;
 		if (options && typeof options !== 'string' && options.mode !== undefined) mode = options.mode;
 		await FileUtils.mkdir(path.dirname(p), mode);
-		await fsPromisify(fs.writeFile, p, data, options);
+		await fsPromises.writeFile(p, data, options);
 	},
 	async writeJSONFile(p: string, data: any, jsonSpace?: number, options?: fs.WriteFileOptions) {
 		return FileUtils.writeFile(p, JSON.stringify(data, undefined, jsonSpace), options);
 	},
 	async readFile(p: string, options?: { encoding?: null; flag?: string }): Promise<any> {
-		return fsPromisify(fs.readFile, p, options);
+		return fsPromises.readFile(p, options);
 	},
 	async readTxtFile(p: string, options?: { encoding?: null; flag?: string }) {
-		return (await fsPromisify(fs.readFile, p, options)).toString();
+		return (await fsPromises.readFile(p, options)).toString();
 	},
 	async readJSONFile(p: string, options?: { encoding?: null; flag?: string }): Promise<any> {
-		const content = (await fsPromisify(fs.readFile, p, options)).toString();
+		const content = (await fsPromises.readFile(p, options)).toString();
 		return content ? JSON.parse(content) : undefined;
 	},
 };

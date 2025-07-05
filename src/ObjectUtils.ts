@@ -120,7 +120,7 @@ export const ObjectUtils = {
 			typeof arg === 'undefined'
 		);
 	},
-	isBuffer(arg: any) {
+	isBuffer(arg: any): any {
 		return Buffer.isBuffer(arg);
 	},
 
